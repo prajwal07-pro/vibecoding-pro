@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI Multi-File Editor</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 :root{
   --bg:#0f1115;--panel:#161a21;--panel2:#1c222b;--border:#2a3240;
@@ -36,17 +35,17 @@ h3{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute
 .warn{color:var(--yellow)}
 .hidden{display:none !important}
 
-button.btn, a.btn, label.btn{background:var(--panel2);color:var(--text);border:1px solid var(--border);
+button.btn, a.btn{background:var(--panel2);color:var(--text);border:1px solid var(--border);
   border-radius:6px;padding:7px 13px;font-size:12px;font-weight:600;letter-spacing:.06em;
   cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:6px;
   transition:background .12s,border-color .12s}
-button.btn:hover:not(:disabled), a.btn:hover, label.btn:hover{background:#232b36;border-color:#3a4553}
+button.btn:hover:not(:disabled), a.btn:hover{background:#232b36;border-color:#3a4553}
 button.btn:disabled{opacity:.55;cursor:not-allowed}
-button.btn.primary, a.btn.primary, label.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-button.btn.primary:hover:not(:disabled), a.btn.primary:hover, label.btn.primary:hover{background:#3d7ce8}
+button.btn.primary, a.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.btn.primary:hover:not(:disabled), a.btn.primary:hover{background:#3d7ce8}
 button.btn.danger, a.btn.danger{background:#3a1c1f;border-color:#5c2a2e;color:#ff9a95}
 button.btn.danger:hover:not(:disabled), a.btn.danger:hover{background:#4a2226}
-button.btn.small, a.btn.small, label.btn.small{padding:5px 9px;font-size:11px}
+button.btn.small, a.btn.small{padding:5px 9px;font-size:11px}
 button.btn.tiny, a.btn.tiny{padding:3px 8px;font-size:10.5px}
 
 input[type=text],input[type=password],input[type=search],textarea,select{
@@ -68,7 +67,6 @@ textarea{width:100%;min-height:160px;line-height:1.5;resize:vertical}
   border-radius:20px;padding:1px 9px;font-size:10.5px;color:var(--muted)}
 .badge.ok{border-color:#1f5c2c;color:#7ee787}
 .badge.bad{border-color:#5c2a2e;color:#ff9a95}
-.badge.warn{border-color:#6e5012;color:#f0c674}
 .tag{display:inline-block;border-radius:4px;padding:1px 7px;font-size:10px;
   letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--border);
   color:var(--muted);background:var(--panel2)}
@@ -141,8 +139,8 @@ button.collapse:hover{background:#232b36}
 .chip button:hover{color:#ff7a75}
 .chip.empty{color:var(--muted);font-style:italic;border-style:dashed;font-family:inherit}
 
-.inlineAdd{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
-.inlineAdd input{flex:1;min-width:180px;font-size:12px;padding:5px 8px}
+.inlineAdd{display:flex;gap:6px;margin-top:6px}
+.inlineAdd input{flex:1;font-size:12px;padding:5px 8px}
 
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media (max-width:860px){.grid2{grid-template-columns:1fr}}
@@ -155,11 +153,12 @@ button.collapse:hover{background:#232b36}
 .panelHead h3{margin:0}
 
 .searchBox{width:100%;margin-bottom:8px;font-size:12px;padding:5px 8px}
+
 .small{font-size:11.5px}
 
 .promptBoxWrap{position:relative}
 .promptBoxWrap textarea{min-height:280px;padding-top:44px}
-.promptBoxCtrl{position:absolute;top:8px;right:8px;display:flex;gap:6px;flex-wrap:wrap;
+.promptBoxCtrl{position:absolute;top:8px;right:8px;display:flex;gap:6px;
   background:rgba(22,26,33,.9);padding:4px;border-radius:8px;border:1px solid var(--border)}
 .micBtn{width:34px;height:32px;display:inline-flex;align-items:center;justify-content:center;
   background:var(--panel2);border:1px solid var(--border);border-radius:6px;cursor:pointer;
@@ -191,14 +190,9 @@ details.rule[open] summary{color:var(--text)}
 <body>
 <div class="wrap">
 
-<!-- Hidden fallback file inputs for ZIP & Folder uploads -->
-<input type="file" id="hiddenZipInput" accept=".zip,application/zip" class="hidden">
-<input type="file" id="hiddenDirInput" webkitdirectory directory multiple class="hidden">
-
 <header>
   <h1>AI MULTI-FILE EDITOR</h1>
   <div class="row" style="margin:0">
-    <span id="workspaceModeBadge" class="badge">No Workspace Loaded</span>
     <span id="groqKeyBadge" class="badge">0 Groq Keys</span>
     <button id="toggleGroqKeysBtn" class="btn small">GROQ API KEYS</button>
   </div>
@@ -207,11 +201,11 @@ details.rule[open] summary{color:var(--text)}
 <!-- FRONTEND GROQ MULTI-KEY CONFIG PANEL -->
 <div id="groqKeyCard" class="card hidden">
   <div class="row space">
-    <h2>Groq API Keys (Automatic Fallback Chain + Server Env Support)</h2>
+    <h2>Groq API Keys (Automatic Fallback Chain)</h2>
     <span class="badge">Stored in Browser LocalStorage</span>
   </div>
   <div class="ruleHelp">
-    Enter multiple Groq API keys (one per line or comma-separated) or set <code>GROQ_API_KEY</code> / <code>AI_API_KEY</code> in Vercel Environment Variables. Requests try Key #1 first and automatically fall back on rate-limit, quota, or network errors.
+    Enter multiple Groq API keys (one per line or comma-separated). Requests try Key #1 first; if it fails (rate limit, quota, auth, or network error), it automatically falls back to Key #2, Key #3, etc.
   </div>
   <div class="chips" id="groqKeysChips"></div>
   <div class="inlineAdd" style="margin-top:8px">
@@ -234,21 +228,17 @@ details.rule[open] summary{color:var(--text)}
 
   <div class="card">
     <div class="row space">
-      <h2>Project Folder (Browser File System Access API / ZIP Fallback)</h2>
-      <span id="genRootStatus" class="badge">not loaded</span>
+      <h2>Project Folder</h2>
+      <span id="genRootStatus" class="badge">not set</span>
     </div>
     <div class="row">
-      <input type="text" id="genRoot" class="mono" style="flex:1;min-width:240px"
-        readonly placeholder="Select a local folder or upload a project ZIP…">
-      <button id="genBrowse" class="btn primary" title="Open local folder with read/write access (File System Access API)">OPEN FOLDER…</button>
-      <button id="genUploadZipBtn" class="btn" title="Upload a .zip archive as project workspace">UPLOAD ZIP…</button>
-      <button id="genDownloadZipBtn" class="btn" title="Download current workspace as a .zip file" disabled>DOWNLOAD ZIP</button>
+      <input type="text" id="genRoot" class="mono" style="flex:1;min-width:280px"
+        placeholder="/absolute/path/to/project">
+      <button id="genBrowse" class="btn">BROWSE…</button>
       <button id="genScan" class="btn primary">SCAN</button>
-      <button id="genGenerate" class="btn danger">GENERATE ALL (DOWNLOAD)</button>
+      <button id="genGenerate" class="btn danger">GENERATE ALL</button>
     </div>
-    <div class="statusBar">
-      Uses the browser File System Access API for direct local folder read/write, with automatic fallback to folder upload or ZIP upload/download. Generating <code>project_source.txt</code> triggers an immediate browser download.
-    </div>
+    <div class="statusBar">Native folder picker opens on the server machine. Manual path entry is the fallback.</div>
     <div id="genStatus" class="statusBar"></div>
     <div id="genErrors" class="err"></div>
   </div>
@@ -292,7 +282,7 @@ details.rule[open] summary{color:var(--text)}
         <button id="genAiAddBtn" class="btn small">ADD FILE</button>
       </div>
       <div class="row">
-        <button id="genAiGenerateBtn" class="btn danger">APPROVE &amp; DOWNLOAD SELECTED</button>
+        <button id="genAiGenerateBtn" class="btn danger">APPROVE &amp; GENERATE SELECTED</button>
       </div>
     </div>
   </div>
@@ -311,17 +301,13 @@ details.rule[open] summary{color:var(--text)}
       non-empty. Folder exclusions always win over any include rule.
     </div>
 
-    <datalist id="workspaceFoldersDatalist"></datalist>
-    <datalist id="workspaceFilesDatalist"></datalist>
-    <datalist id="workspaceFilenamesDatalist"></datalist>
-
     <details class="rule">
       <summary>Included Folders (whitelist — empty = all)</summary>
       <div class="chips" id="chips-included_folders"></div>
       <div class="inlineAdd">
-        <input type="text" id="add-included_folders" list="workspaceFoldersDatalist" placeholder="relative/path or leave blank for all">
+        <input type="text" id="add-included_folders" placeholder="relative/path or leave blank for all">
         <button class="btn small" data-add="included_folders">ADD</button>
-        <button class="btn small" data-browse-folder="included_folders">PICK FROM LOADED…</button>
+        <button class="btn small" data-browse-folder="included_folders">BROWSE…</button>
       </div>
     </details>
 
@@ -329,9 +315,9 @@ details.rule[open] summary{color:var(--text)}
       <summary>Excluded Folders</summary>
       <div class="chips" id="chips-excluded_folders"></div>
       <div class="inlineAdd">
-        <input type="text" id="add-excluded_folders" list="workspaceFoldersDatalist" placeholder="folder name or relative path">
+        <input type="text" id="add-excluded_folders" placeholder="folder name or relative path">
         <button class="btn small" data-add="excluded_folders">ADD</button>
-        <button class="btn small" data-browse-folder="excluded_folders">PICK FROM LOADED…</button>
+        <button class="btn small" data-browse-folder="excluded_folders">BROWSE…</button>
       </div>
     </details>
 
@@ -339,9 +325,9 @@ details.rule[open] summary{color:var(--text)}
       <summary>Included Files (explicit)</summary>
       <div class="chips" id="chips-included_files"></div>
       <div class="inlineAdd">
-        <input type="text" id="add-included_files" list="workspaceFilesDatalist" placeholder="relative/path/to/file.ext">
+        <input type="text" id="add-included_files" placeholder="relative/path/to/file.ext">
         <button class="btn small" data-add="included_files">ADD</button>
-        <button class="btn small" data-browse-file="included_files">PICK FROM LOADED…</button>
+        <button class="btn small" data-browse-file="included_files">BROWSE…</button>
       </div>
     </details>
 
@@ -349,9 +335,9 @@ details.rule[open] summary{color:var(--text)}
       <summary>Excluded Files (explicit)</summary>
       <div class="chips" id="chips-excluded_files"></div>
       <div class="inlineAdd">
-        <input type="text" id="add-excluded_files" list="workspaceFilesDatalist" placeholder="relative/path/to/file.ext">
+        <input type="text" id="add-excluded_files" placeholder="relative/path/to/file.ext">
         <button class="btn small" data-add="excluded_files">ADD</button>
-        <button class="btn small" data-browse-file="excluded_files">PICK FROM LOADED…</button>
+        <button class="btn small" data-browse-file="excluded_files">BROWSE…</button>
       </div>
     </details>
 
@@ -377,9 +363,9 @@ details.rule[open] summary{color:var(--text)}
       <summary>Included Filenames</summary>
       <div class="chips" id="chips-included_filenames"></div>
       <div class="inlineAdd">
-        <input type="text" id="add-included_filenames" list="workspaceFilenamesDatalist" placeholder="Dockerfile">
+        <input type="text" id="add-included_filenames" placeholder="Dockerfile">
         <button class="btn small" data-add="included_filenames">ADD</button>
-        <button class="btn small" data-browse-filename="included_filenames">PICK FROM LOADED…</button>
+        <button class="btn small" data-browse-filename="included_filenames">BROWSE…</button>
       </div>
     </details>
 
@@ -387,9 +373,9 @@ details.rule[open] summary{color:var(--text)}
       <summary>Excluded Filenames</summary>
       <div class="chips" id="chips-excluded_filenames"></div>
       <div class="inlineAdd">
-        <input type="text" id="add-excluded_filenames" list="workspaceFilenamesDatalist" placeholder=".DS_Store">
+        <input type="text" id="add-excluded_filenames" placeholder=".DS_Store">
         <button class="btn small" data-add="excluded_filenames">ADD</button>
-        <button class="btn small" data-browse-filename="excluded_filenames">PICK FROM LOADED…</button>
+        <button class="btn small" data-browse-filename="excluded_filenames">BROWSE…</button>
       </div>
     </details>
   </div>
@@ -424,7 +410,7 @@ details.rule[open] summary{color:var(--text)}
     <div class="row space">
       <h2>Output</h2>
     </div>
-    <div id="genOutput" class="muted small">Generate to download <code>project_source.txt</code> and see output stats.</div>
+    <div id="genOutput" class="muted small">Generate to see output stats.</div>
   </div>
 
 </section>
@@ -434,21 +420,16 @@ details.rule[open] summary{color:var(--text)}
 
   <div class="card">
     <div class="row space">
-      <h2>Project Workspace</h2>
-      <span id="editorRootStatus" class="badge">not loaded</span>
+      <h2>Project Root</h2>
+      <span id="editorRootStatus" class="badge">not set</span>
     </div>
     <div class="row">
-      <input type="text" id="editorRoot" class="mono" style="flex:1;min-width:240px"
-        readonly placeholder="Select a local folder or upload a project ZIP…">
-      <button id="editorBrowse" class="btn primary">OPEN FOLDER…</button>
-      <button id="editorUploadZipBtn" class="btn">UPLOAD ZIP…</button>
-      <button id="editorDownloadZipBtn" class="btn" disabled>DOWNLOAD PROJECT ZIP</button>
-      <button id="editorReloadBtn" class="btn" disabled>RESCAN FOLDER</button>
+      <input type="text" id="editorRoot" class="mono" style="flex:1;min-width:280px"
+        placeholder="/absolute/path/to/project">
+      <button id="editorBrowse" class="btn">BROWSE…</button>
+      <button id="editorSaveRoot" class="btn primary">SET ROOT</button>
     </div>
-    <div class="statusBar">
-      Backups &amp; History are stored persistently in Browser IndexedDB (<span class="mono" id="editorBackupDir">Browser IndexedDB</span>).
-      When using <strong>OPEN FOLDER</strong> (File System Access API), applying changes writes directly to your local disk. When using <strong>ZIP mode</strong>, applying changes updates the in-memory workspace and offers an immediate patched ZIP download.
-    </div>
+    <div class="statusBar">Backups for this root live in <span class="mono" id="editorBackupDir">…</span>.</div>
     <div id="editorRootMsg" class="statusBar"></div>
   </div>
 
@@ -476,7 +457,6 @@ details.rule[open] summary{color:var(--text)}
     <div class="row">
       <button id="cancelBtn" class="btn">CANCEL</button>
       <button id="applyBtn" class="btn danger">CONFIRM &amp; APPLY VALID FILES</button>
-      <button id="downloadPatchedZipBtn" class="btn small hidden">DOWNLOAD PATCHED PROJECT ZIP</button>
       <button id="keepFailedBtn" class="btn small hidden">KEEP ONLY FAILED IN INPUT</button>
       <span id="applyMsg" class="msg"></span>
     </div>
@@ -484,11 +464,8 @@ details.rule[open] summary{color:var(--text)}
 
   <section class="card">
     <div class="row space">
-      <h2>History (Persistent Browser IndexedDB Backups)</h2>
-      <div class="row" style="margin:0;gap:6px">
-        <button id="histRefresh" class="btn small">REFRESH</button>
-        <button id="histClearBtn" class="btn small danger">CLEAR HISTORY</button>
-      </div>
+      <h2>History</h2>
+      <button id="histRefresh" class="btn small">REFRESH</button>
     </div>
     <div id="historyBox" class="muted">loading…</div>
   </section>
@@ -500,7 +477,7 @@ details.rule[open] summary{color:var(--text)}
   <div class="card">
     <div class="row space">
       <h2>Custom Task Prompt</h2>
-      <span class="badge">Live Browser + Whisper + IndexedDB Saved Audio</span>
+      <span class="badge">Live Browser + Whisper + Saved Audio</span>
     </div>
     <div class="promptBoxWrap">
       <div class="promptBoxCtrl">
@@ -510,7 +487,7 @@ details.rule[open] summary{color:var(--text)}
         <button id="copyPromptBtn" class="btn small primary" title="Copy task prompt + fixed format instructions &amp; save with recording">COPY WITH FORMAT</button>
       </div>
       <textarea id="promptText" spellcheck="false"
-        placeholder="Type or dictate your task here. Live browser speech recognition previews while speaking, then Groq Whisper replaces it with the accurate transcription. The background voice recording is saved automatically in browser IndexedDB so you can listen to it anytime or download it if transcription fails."></textarea>
+        placeholder="Type or dictate your task here. Live browser speech recognition previews while speaking, then Groq Whisper replaces it with the accurate transcription. The background voice recording is saved automatically so you can listen to it anytime or download it if transcription fails."></textarea>
     </div>
     <div id="micStatus" class="statusBar"></div>
     <div id="promptAudioPlayerWrap" class="audioBar hidden"></div>
@@ -535,7 +512,7 @@ details.rule[open] summary{color:var(--text)}
       <span class="badge">Compressed Token-Efficient Format</span>
     </div>
     <div class="ruleHelp">
-      Compressed response-format instructions preserving all delimiters, validation rules and response behaviour. Stored persistently in your browser. Click Copy Fixed Prompt to copy standalone, or Copy With Format in Section 3.
+      Compressed response-format instructions preserving all delimiters, validation rules and response behaviour. Click Copy Fixed Prompt to copy standalone, or Copy With Format in Section 3.
     </div>
     <textarea id="fixedPromptText" style="min-height:300px" spellcheck="false"></textarea>
     <div class="row">
@@ -552,33 +529,14 @@ details.rule[open] summary{color:var(--text)}
 
 <script>
 const $ = (id) => document.getElementById(id);
-
 const GROQ_KEYS_STORAGE_KEY = "ai_editor_groq_api_keys_v1";
-const GEN_CONFIG_STORAGE_KEY = "ai_editor_gen_config_v2";
-const FIXED_PROMPT_STORAGE_KEY = "ai_editor_fixed_prompt_v2";
-const IDB_NAME = "ai_multi_file_editor_db";
-const IDB_VERSION = 1;
-
-/* ==========================================================
-   Virtual Workspace & App State
-   ========================================================== */
-const workspace = {
-  name: "",
-  mode: "none", // "fsa" (FileSystemDirectoryHandle) | "memory" (ZIP / folder input) | "none"
-  dirHandle: null,
-  files: new Map(), // relPath -> { size: number, binary: boolean, content: string|null, bytes: Uint8Array|null }
-  allFolders: [],
-};
 
 const state = {
   groqKeys: [],
-  hasServerGroqKey: false,
   groqShowPlain: false,
   gen: null,
-  genDefaults: null,
   genRoot: "",
   genScan: null,
-  lastGeneratedBlobUrl: null,
   aiSelected: [],
   aiChecked: {},
   editor: {
@@ -586,10 +544,8 @@ const state = {
     check:[], checkErrors:[], expected:{}, parseErrors:[]
   },
   prompts: [],
-  lastRecordingId: null,
   lastRecordingFilename: null,
   lastRecordingUrl: null,
-  audioUrls: new Map(),
 };
 
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, c => (
@@ -606,108 +562,7 @@ function toast(msg, kind){
 }
 
 /* ==========================================================
-   IndexedDB Persistent Storage (History, Prompts, Audio Recordings)
-   ========================================================== */
-let dbPromise = null;
-function getDB(){
-  if (dbPromise) return dbPromise;
-  dbPromise = new Promise((resolve, reject) => {
-    const req = indexedDB.open(IDB_NAME, IDB_VERSION);
-    req.onupgradeneeded = (ev) => {
-      const db = ev.target.result;
-      if (!db.objectStoreNames.contains("history")){
-        db.createObjectStore("history", { keyPath: "id" });
-      }
-      if (!db.objectStoreNames.contains("prompts")){
-        db.createObjectStore("prompts", { keyPath: "id" });
-      }
-      if (!db.objectStoreNames.contains("recordings")){
-        db.createObjectStore("recordings", { keyPath: "id" });
-      }
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-  return dbPromise;
-}
-
-async function idbGetAll(storeName){
-  const db = await getDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, "readonly");
-    const req = tx.objectStore(storeName).getAll();
-    req.onsuccess = () => resolve(req.result || []);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-async function idbGet(storeName, key){
-  const db = await getDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, "readonly");
-    const req = tx.objectStore(storeName).get(key);
-    req.onsuccess = () => resolve(req.result || null);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-async function idbPut(storeName, value){
-  const db = await getDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, "readwrite");
-    const req = tx.objectStore(storeName).put(value);
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-async function idbDelete(storeName, key){
-  const db = await getDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, "readwrite");
-    const req = tx.objectStore(storeName).delete(key);
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
-  });
-}
-
-async function idbClear(storeName){
-  const db = await getDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(storeName, "readwrite");
-    const req = tx.objectStore(storeName).clear();
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
-  });
-}
-
-async function saveRecordingToIDB(blob, filename){
-  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const id = "rec_" + stamp + "_" + Math.random().toString(36).slice(2, 8);
-  const record = {
-    id,
-    filename: filename || (id + ".webm"),
-    blob,
-    timestamp: new Date().toISOString(),
-  };
-  await idbPut("recordings", record);
-  const url = URL.createObjectURL(blob);
-  state.audioUrls.set(id, url);
-  return { id, filename: record.filename, url };
-}
-
-async function getRecordingUrlFromIDB(id){
-  if (!id) return null;
-  if (state.audioUrls.has(id)) return state.audioUrls.get(id);
-  const rec = await idbGet("recordings", id);
-  if (!rec || !rec.blob) return null;
-  const url = URL.createObjectURL(rec.blob);
-  state.audioUrls.set(id, url);
-  return url;
-}
-
-/* ==========================================================
-   Groq Multi-Key Management (Frontend LocalStorage + Env Check)
+   Groq Multi-Key Management (Frontend LocalStorage)
    ========================================================== */
 function loadGroqKeys(){
   try {
@@ -736,24 +591,12 @@ function maskKey(k){
 function renderGroqKeys(){
   const n = state.groqKeys.length;
   const badge = $("groqKeyBadge");
-  if (n > 0){
-    badge.textContent = n + " Groq Key" + (n === 1 ? "" : "s") + (state.hasServerGroqKey ? " + Server Env" : "");
-    badge.className = "badge ok";
-  } else if (state.hasServerGroqKey){
-    badge.textContent = "Server Env Key Active";
-    badge.className = "badge ok";
-  } else {
-    badge.textContent = "0 Groq Keys";
-    badge.className = "badge bad";
-  }
+  badge.textContent = n + " Groq Key" + (n === 1 ? "" : "s");
+  badge.className = "badge " + (n > 0 ? "ok" : "bad");
 
   const box = $("groqKeysChips");
   if (!n){
-    box.innerHTML = '<span class="chip empty">' +
-      (state.hasServerGroqKey
-        ? 'Using server environment key (GROQ_API_KEY / AI_API_KEY). You can also add frontend keys below.'
-        : 'No frontend keys configured — add Groq API keys below or set GROQ_API_KEY in Vercel Environment Variables') +
-      '</span>';
+    box.innerHTML = '<span class="chip empty">No frontend keys configured — add Groq API keys below for automatic fallback</span>';
     return;
   }
   box.innerHTML = state.groqKeys.map((k, idx) =>
@@ -835,19 +678,6 @@ async function copyTextToClipboard(text){
   }
 }
 
-function triggerBlobDownload(blob, filename){
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => {
-    try { URL.revokeObjectURL(url); } catch(e){}
-  }, 60000);
-}
-
 async function api(path, opts){
   const res = await fetch(path, opts);
   let data = null;
@@ -882,295 +712,7 @@ document.querySelectorAll(".tabs button").forEach(btn => {
 });
 
 /* ==========================================================
-   Browser File System Access API & ZIP Workspace Engine
-   ========================================================== */
-function isBinaryBuffer(uint8){
-  const len = Math.min(uint8.length, 8192);
-  for (let i = 0; i < len; i++){
-    if (uint8[i] === 0) return true;
-  }
-  return false;
-}
-
-function getExt(filename){
-  const name = filename.toLowerCase();
-  if (name.startsWith(".") && (name.match(/\./g) || []).length === 1) return name;
-  const idx = name.lastIndexOf(".");
-  return idx >= 0 ? name.slice(idx) : "";
-}
-
-async function sha256Hex(text){
-  const data = new TextEncoder().encode(text);
-  const hashBuf = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, "0")).join("");
-}
-
-function rebuildWorkspaceFolderSet(){
-  const folderSet = new Set();
-  const fileList = [];
-  const nameSet = new Set();
-  for (const rel of workspace.files.keys()){
-    fileList.push(rel);
-    const parts = rel.split("/");
-    nameSet.add(parts[parts.length - 1]);
-    let acc = "";
-    for (let i = 0; i < parts.length - 1; i++){
-      acc = acc ? (acc + "/" + parts[i]) : parts[i];
-      folderSet.add(acc);
-    }
-  }
-  workspace.allFolders = Array.from(folderSet).sort();
-  $("workspaceFoldersDatalist").innerHTML = workspace.allFolders.map(f => '<option value="' + esc(f) + '">').join("");
-  $("workspaceFilesDatalist").innerHTML = fileList.sort().slice(0, 1500).map(f => '<option value="' + esc(f) + '">').join("");
-  $("workspaceFilenamesDatalist").innerHTML = Array.from(nameSet).sort().map(f => '<option value="' + esc(f) + '">').join("");
-}
-
-function updateWorkspaceStatusUI(){
-  const count = workspace.files.size;
-  const hasWorkspace = workspace.mode !== "none";
-  const label = hasWorkspace
-    ? (workspace.name + " (" + count + " files · " + (workspace.mode === "fsa" ? "Live Folder R/W" : "ZIP / Memory") + ")")
-    : "not loaded";
-
-  state.genRoot = workspace.name || "";
-  $("genRoot").value = hasWorkspace ? label : "";
-  $("editorRoot").value = hasWorkspace ? label : "";
-
-  $("genRootStatus").textContent = hasWorkspace ? (workspace.mode === "fsa" ? "Folder Linked" : "ZIP Loaded") : "not loaded";
-  $("genRootStatus").className = "badge " + (hasWorkspace ? "ok" : "");
-
-  $("editorRootStatus").textContent = hasWorkspace ? (workspace.mode === "fsa" ? "Live Folder R/W" : "ZIP Workspace") : "not loaded";
-  $("editorRootStatus").className = "badge " + (hasWorkspace ? "ok" : "bad");
-
-  $("workspaceModeBadge").textContent = hasWorkspace
-    ? (workspace.mode === "fsa" ? ("Folder: " + workspace.name) : ("ZIP: " + workspace.name))
-    : "No Workspace Loaded";
-  $("workspaceModeBadge").className = "badge " + (hasWorkspace ? "ok" : "");
-
-  $("genDownloadZipBtn").disabled = !hasWorkspace;
-  $("editorDownloadZipBtn").disabled = !hasWorkspace;
-  $("editorReloadBtn").disabled = workspace.mode !== "fsa";
-  $("editorBackupDir").textContent = workspace.name ? ("IndexedDB (" + workspace.name + ")") : "Browser IndexedDB";
-}
-
-const HARD_SKIP_DIRS = new Set([".git", ".backup"]);
-
-async function readDirectoryHandleRecursive(dirHandle, prefix = "", outMap = new Map()){
-  for await (const [name, handle] of dirHandle.entries()){
-    if (handle.kind === "directory"){
-      if (HARD_SKIP_DIRS.has(name)) continue;
-      const nextPrefix = prefix ? (prefix + "/" + name) : name;
-      await readDirectoryHandleRecursive(handle, nextPrefix, outMap);
-    } else if (handle.kind === "file"){
-      const rel = prefix ? (prefix + "/" + name) : name;
-      try {
-        const file = await handle.getFile();
-        const buf = new Uint8Array(await file.arrayBuffer());
-        const bin = isBinaryBuffer(buf);
-        const text = bin ? null : new TextDecoder("utf-8", { fatal: false }).decode(buf);
-        outMap.set(rel, {
-          size: file.size,
-          binary: bin,
-          content: text,
-          bytes: bin ? buf : null,
-        });
-      } catch(e){}
-    }
-  }
-  return outMap;
-}
-
-async function openBrowserDirectory(){
-  if (window.showDirectoryPicker){
-    try {
-      const dirHandle = await window.showDirectoryPicker({ mode: "readwrite" });
-      $("genStatus").textContent = "Reading folder contents…";
-      const map = await readDirectoryHandleRecursive(dirHandle);
-      workspace.name = dirHandle.name;
-      workspace.mode = "fsa";
-      workspace.dirHandle = dirHandle;
-      workspace.files = map;
-      rebuildWorkspaceFolderSet();
-      updateWorkspaceStatusUI();
-      doGenScan();
-      await loadHistory();
-      toast("Loaded folder '" + dirHandle.name + "' (" + map.size + " files) with read/write access.", "ok");
-    } catch(e){
-      if (e && e.name === "AbortError") return;
-      toast("Folder access error: " + e.message, "bad");
-    }
-  } else {
-    // Fallback for browsers without showDirectoryPicker (e.g., Firefox / Safari)
-    $("hiddenDirInput").value = "";
-    $("hiddenDirInput").click();
-  }
-}
-
-$("hiddenDirInput").addEventListener("change", async (ev) => {
-  const fileList = Array.from(ev.target.files || []);
-  if (!fileList.length) return;
-  $("genStatus").textContent = "Reading selected directory files…";
-  const map = new Map();
-  let rootName = "project";
-  for (const file of fileList){
-    const rawRel = (file.webkitRelativePath || file.name).replace(/\\/g, "/");
-    const parts = rawRel.split("/");
-    if (parts.length > 1) rootName = parts[0];
-    const rel = parts.length > 1 ? parts.slice(1).join("/") : parts[0];
-    if (!rel || parts.some(p => HARD_SKIP_DIRS.has(p))) continue;
-    const buf = new Uint8Array(await file.arrayBuffer());
-    const bin = isBinaryBuffer(buf);
-    const text = bin ? null : new TextDecoder("utf-8", { fatal: false }).decode(buf);
-    map.set(rel, {
-      size: file.size,
-      binary: bin,
-      content: text,
-      bytes: bin ? buf : null,
-    });
-  }
-  workspace.name = rootName;
-  workspace.mode = "memory";
-  workspace.dirHandle = null;
-  workspace.files = map;
-  rebuildWorkspaceFolderSet();
-  updateWorkspaceStatusUI();
-  doGenScan();
-  await loadHistory();
-  toast("Loaded directory '" + rootName + "' (" + map.size + " files). Edits will download as ZIP.", "ok");
-});
-
-async function loadZipFileIntoWorkspace(file){
-  if (!file) return;
-  if (typeof JSZip === "undefined"){
-    toast("JSZip library failed to load.", "bad");
-    return;
-  }
-  $("genStatus").textContent = "Extracting ZIP archive…";
-  try {
-    const zip = await JSZip.loadAsync(file);
-    const entries = [];
-    zip.forEach((relPath, zipEntry) => {
-      if (!zipEntry.dir){
-        entries.push({ relPath: relPath.replace(/\\/g, "/").replace(/^\/+/, ""), zipEntry });
-      }
-    });
-
-    // Strip common single top-level wrapper folder if present
-    let commonRoot = null;
-    if (entries.length > 0){
-      const firstSegs = new Set(entries.map(e => e.relPath.split("/")[0]));
-      if (firstSegs.size === 1 && entries.every(e => e.relPath.includes("/"))){
-        commonRoot = Array.from(firstSegs)[0];
-      }
-    }
-
-    const map = new Map();
-    for (const item of entries){
-      let rel = item.relPath;
-      if (commonRoot && rel.startsWith(commonRoot + "/")){
-        rel = rel.slice(commonRoot.length + 1);
-      }
-      if (!rel) continue;
-      const segs = rel.split("/");
-      if (segs.some(s => HARD_SKIP_DIRS.has(s))) continue;
-
-      const uint8 = await item.zipEntry.async("uint8array");
-      const bin = isBinaryBuffer(uint8);
-      const text = bin ? null : new TextDecoder("utf-8", { fatal: false }).decode(uint8);
-      map.set(rel, {
-        size: uint8.byteLength,
-        binary: bin,
-        content: text,
-        bytes: bin ? uint8 : null,
-      });
-    }
-
-    const cleanName = file.name.replace(/\.zip$/i, "") || commonRoot || "project";
-    workspace.name = cleanName;
-    workspace.mode = "memory";
-    workspace.dirHandle = null;
-    workspace.files = map;
-    rebuildWorkspaceFolderSet();
-    updateWorkspaceStatusUI();
-    doGenScan();
-    await loadHistory();
-    toast("Loaded ZIP '" + file.name + "' (" + map.size + " files).", "ok");
-  } catch(e){
-    toast("Failed to read ZIP: " + e.message, "bad");
-  }
-}
-
-$("hiddenZipInput").addEventListener("change", (ev) => {
-  const f = ev.target.files && ev.target.files[0];
-  if (f) loadZipFileIntoWorkspace(f);
-});
-
-async function downloadWorkspaceAsZip(customSuffix = ""){
-  if (workspace.mode === "none" || !workspace.files.size){
-    toast("No project loaded to export.", "bad");
-    return;
-  }
-  const zip = new JSZip();
-  for (const [rel, entry] of workspace.files.entries()){
-    if (entry.binary && entry.bytes){
-      zip.file(rel, entry.bytes);
-    } else if (entry.content != null){
-      zip.file(rel, entry.content);
-    }
-  }
-  const blob = await zip.generateAsync({ type: "blob" });
-  const filename = (workspace.name || "project") + (customSuffix ? ("_" + customSuffix) : "") + ".zip";
-  triggerBlobDownload(blob, filename);
-  toast("Downloaded " + filename, "ok");
-}
-
-async function writeFileToFsaHandle(rootHandle, relPath, content){
-  const parts = relPath.split("/").filter(Boolean);
-  let curr = rootHandle;
-  for (let i = 0; i < parts.length - 1; i++){
-    curr = await curr.getDirectoryHandle(parts[i], { create: true });
-  }
-  const fileHandle = await curr.getFileHandle(parts[parts.length - 1], { create: true });
-  const writable = await fileHandle.createWritable();
-  await writable.write(content);
-  await writable.close();
-}
-
-async function deleteFileFromFsaHandle(rootHandle, relPath){
-  const parts = relPath.split("/").filter(Boolean);
-  let curr = rootHandle;
-  for (let i = 0; i < parts.length - 1; i++){
-    curr = await curr.getDirectoryHandle(parts[i], { create: false });
-  }
-  await curr.removeEntry(parts[parts.length - 1]);
-}
-
-async function writeAndVerifyWorkspaceFile(relPath, content){
-  if (workspace.mode === "fsa" && workspace.dirHandle){
-    await writeFileToFsaHandle(workspace.dirHandle, relPath, content);
-  }
-  const bytes = new TextEncoder().encode(content);
-  workspace.files.set(relPath, {
-    size: bytes.byteLength,
-    binary: false,
-    content: content,
-    bytes: null,
-  });
-}
-
-async function deleteAndVerifyWorkspaceFile(relPath){
-  if (workspace.mode === "fsa" && workspace.dirHandle){
-    try {
-      await deleteFileFromFsaHandle(workspace.dirHandle, relPath);
-    } catch(e){
-      if (e.name !== "NotFoundError") throw e;
-    }
-  }
-  workspace.files.delete(relPath);
-}
-
-/* ==========================================================
-   Audio Player Bar Helper
+   Audio Player Bar Helper (for Section 1, Section 3, and Failures)
    ========================================================== */
 function renderAudioPlayerBar(containerId, audioUrl, downloadFilename, extraNoteHtml){
   const wrap = $(containerId);
@@ -1191,7 +733,7 @@ function renderAudioPlayerBar(containerId, audioUrl, downloadFilename, extraNote
 }
 
 /* ==========================================================
-   Reusable Hybrid Voice Controller (Live Browser SR + IndexedDB Recording + Multi-Key Whisper)
+   Reusable Hybrid Voice Controller (Live Browser SR + Saved Recording + Multi-Key Whisper)
    ========================================================== */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -1204,6 +746,7 @@ function createVoiceController(textareaId, btnId, statusId, audioWrapId){
     chunks: [],
     baseText: "",
     sessionTranscript: "",
+    lastBlobUrl: null,
   };
 
   function updateUI(){
@@ -1312,24 +855,17 @@ function createVoiceController(textareaId, btnId, statusId, audioWrapId){
           return;
         }
 
-        const ext = blobType.includes("mp4") ? "m4a" : blobType.includes("ogg") ? "ogg" : "webm";
-        const downloadName = "voice_" + new Date().toISOString().replace(/[:.]/g, "-") + "." + ext;
-
-        // Save immediately to Browser IndexedDB so recording is never lost
-        let savedRec = null;
-        try {
-          savedRec = await saveRecordingToIDB(blob, downloadName);
-          state.lastRecordingId = savedRec.id;
-          state.lastRecordingFilename = savedRec.filename;
-          state.lastRecordingUrl = savedRec.url;
-        } catch(e){
-          const fallbackUrl = URL.createObjectURL(blob);
-          savedRec = { id: null, filename: downloadName, url: fallbackUrl };
+        if (ctrl.lastBlobUrl) {
+          try { URL.revokeObjectURL(ctrl.lastBlobUrl); } catch(e){}
         }
+        ctrl.lastBlobUrl = URL.createObjectURL(blob);
+        const ext = blobType.includes("mp4") ? "m4a" : blobType.includes("ogg") ? "ogg" : "webm";
+        const fallbackDownloadName = "voice_" + new Date().toISOString().replace(/[:.]/g, "-") + "." + ext;
 
-        renderAudioPlayerBar(audioWrapId, savedRec.url, savedRec.filename);
+        // Immediately show player + download option from local blob even while transcribing
+        renderAudioPlayerBar(audioWrapId, ctrl.lastBlobUrl, fallbackDownloadName);
 
-        statusEl.innerHTML = '<span class="warn">Audio saved in browser IndexedDB. Transcribing with Groq Whisper…</span>';
+        statusEl.innerHTML = '<span class="warn">Saving audio &amp; transcribing with Groq Whisper…</span>';
         const fd = new FormData();
         fd.append("audio", blob, "voice." + ext);
         fd.append("api_keys", JSON.stringify(state.groqKeys || []));
@@ -1338,27 +874,40 @@ function createVoiceController(textareaId, btnId, statusId, audioWrapId){
           const data = await api("/api/ai/transcribe", { method: "POST", body: fd });
           const whisperText = (data && data.text ? data.text : "").trim();
 
+          if (data && data.recording_filename){
+            state.lastRecordingFilename = data.recording_filename;
+            state.lastRecordingUrl = data.recording_url;
+            renderAudioPlayerBar(audioWrapId, data.recording_url, data.recording_filename);
+          }
+
           if (whisperText){
             const sep = (ctrl.baseText && !/\s$/.test(ctrl.baseText)) ? " " : "";
             ta.value = ctrl.baseText + sep + whisperText;
             const keyInfo = data.key_used ? (" via " + data.key_used) : "";
             statusEl.innerHTML = '<span class="ok">Whisper transcription complete (' +
               esc(data.model || "whisper") + esc(keyInfo) +
-              '). Recording saved in browser storage (' + esc(savedRec.filename) + ').</span>';
+              '). Recording saved (' + esc(data.recording_filename || "") + ').</span>';
           } else {
             statusEl.innerHTML = '<span class="warn">Whisper returned empty text; kept temporary browser transcription. You can download or listen to the recording below.</span>';
           }
         } catch(e){
+          const d = e.detail || {};
+          const serverUrl = d.recording_url || ctrl.lastBlobUrl;
+          const serverFile = d.recording_filename || fallbackDownloadName;
+          if (d.recording_filename){
+            state.lastRecordingFilename = d.recording_filename;
+            state.lastRecordingUrl = d.recording_url;
+          }
           renderAudioPlayerBar(
             audioWrapId,
-            savedRec.url,
-            savedRec.filename,
-            '<span class="bad">Speech-to-text failed — download your saved recording above or replay it anytime.</span>'
+            serverUrl,
+            serverFile,
+            '<span class="bad">Speech-to-text failed — download your background recording above or replay it anytime.</span>'
           );
           statusEl.innerHTML =
             '<span class="bad">Whisper transcription failed: ' + esc(e.message) +
             ' (kept live browser text).</span> ' +
-            '<a class="btn tiny danger" href="' + esc(savedRec.url) + '" download="' + esc(savedRec.filename) + '">' +
+            '<a class="btn tiny danger" href="' + esc(serverUrl) + '" download="' + esc(serverFile) + '">' +
               '&#11015; DOWNLOAD FAILED AUDIO RECORDING' +
             '</a>';
         }
@@ -1399,7 +948,7 @@ function createVoiceController(textareaId, btnId, statusId, audioWrapId){
 }
 
 /* ==========================================================
-   SECTION 1 — Client-Side Scanner, Source Generator & AI Analyzer
+   SECTION 1 — Generator & AI Affected-File Analyzer
    ========================================================== */
 const RULE_KEYS = [
   "included_folders","excluded_folders",
@@ -1408,56 +957,25 @@ const RULE_KEYS = [
   "included_filenames","excluded_filenames",
 ];
 
-function normalizeGenConfigClient(cfg, defaults){
-  const base = Object.assign({}, defaults || {}, cfg || {});
-  const normList = (arr, lower=false, dot=false) => {
-    const out = [];
-    const seen = new Set();
-    for (const raw of (arr || [])){
-      if (raw == null) continue;
-      let s = String(raw).trim().replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
-      if (!s) continue;
-      if (dot && !s.startsWith(".")) s = "." + s;
-      if (lower) s = s.toLowerCase();
-      if (!seen.has(s)){ seen.add(s); out.push(s); }
-    }
-    return out;
-  };
-  return {
-    root: String(base.root || ""),
-    included_folders: normList(base.included_folders),
-    excluded_folders: normList(base.excluded_folders),
-    included_files: normList(base.included_files),
-    excluded_files: normList(base.excluded_files),
-    included_extensions: normList(base.included_extensions, true, true),
-    excluded_extensions: normList(base.excluded_extensions, true, true),
-    included_filenames: normList(base.included_filenames),
-    excluded_filenames: normList(base.excluded_filenames),
-  };
+function relFromRoot(absPath, root){
+  if (!absPath) return "";
+  if (!root) return absPath;
+  const r = root.replace(/\/+$/, "");
+  if (absPath === r) return "";
+  if (absPath.startsWith(r + "/")) return absPath.substring(r.length + 1);
+  return null;
 }
 
 async function loadGenConfig(){
   try {
     const data = await api("/api/gen/config");
-    state.genDefaults = data.defaults;
-    let saved = null;
-    try {
-      const raw = localStorage.getItem(GEN_CONFIG_STORAGE_KEY);
-      if (raw) saved = JSON.parse(raw);
-    } catch(e){}
-    state.gen = normalizeGenConfigClient(saved || data.config, data.defaults);
+    state.gen = data.config;
+    state.genRoot = data.config.root || "";
+    $("genRoot").value = state.genRoot;
     renderRules();
   } catch(e){
     $("genErrors").textContent = "Failed to load config: " + e.message;
   }
-}
-
-function saveGenConfigLocal(){
-  if (!state.gen) return;
-  state.gen = normalizeGenConfigClient(state.gen, state.genDefaults);
-  try {
-    localStorage.setItem(GEN_CONFIG_STORAGE_KEY, JSON.stringify(state.gen));
-  } catch(e){}
 }
 
 function renderRules(){
@@ -1484,7 +1002,6 @@ document.getElementById("tab-gen").addEventListener("click", async (ev) => {
     const k = rm.dataset.rule;
     const i = Number(rm.dataset.index);
     if (state.gen && state.gen[k]) state.gen[k].splice(i, 1);
-    saveGenConfigLocal();
     renderRules();
     return;
   }
@@ -1493,193 +1010,103 @@ document.getElementById("tab-gen").addEventListener("click", async (ev) => {
   if (addBtn){
     const k = addBtn.dataset.add;
     const inp = $("add-" + k);
-    let v = (inp.value || "").trim().replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
+    const v = (inp.value || "").trim();
     if (!v || !state.gen) return;
-    if (k.endsWith("_extensions")){
-      if (!v.startsWith(".")) v = "." + v;
-      v = v.toLowerCase();
-    }
     if (!state.gen[k].includes(v)) state.gen[k].push(v);
     inp.value = "";
-    saveGenConfigLocal();
     renderRules();
     return;
   }
 
   const bf = ev.target.closest("button[data-browse-folder]");
   if (bf){
-    if (workspace.mode === "none"){ toast("Load a project folder or ZIP first.", "bad"); return; }
-    const k = bf.dataset.browseFolder;
-    const sample = workspace.allFolders.slice(0, 30).join(", ");
-    const picked = prompt("Enter relative folder path from loaded project" + (sample ? ("\nAvailable: " + sample) : "") + ":");
-    if (!picked) return;
-    const rel = picked.trim().replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
-    if (rel && !state.gen[k].includes(rel)){
-      state.gen[k].push(rel);
-      saveGenConfigLocal();
+    if (!state.genRoot){ toast("Set project root first.", "bad"); return; }
+    try {
+      const r = await postJSON("/api/pick-folder", {initial: state.genRoot, base: state.genRoot});
+      if (!r.path) return;
+      const rel = relFromRoot(r.path, state.genRoot);
+      if (rel === null){ toast("Selected folder is outside project root.", "bad"); return; }
+      if (!rel){ toast("That is the project root itself.", "bad"); return; }
+      const k = bf.dataset.browseFolder;
+      if (!state.gen[k].includes(rel)) state.gen[k].push(rel);
       renderRules();
-    }
+    } catch(e){ toast(e.message, "bad"); }
     return;
   }
 
   const bfile = ev.target.closest("button[data-browse-file]");
   if (bfile){
-    if (workspace.mode === "none"){ toast("Load a project folder or ZIP first.", "bad"); return; }
-    const k = bfile.dataset.browseFile;
-    const picked = prompt("Enter relative file path from loaded project:");
-    if (!picked) return;
-    const rel = picked.trim().replace(/\\/g, "/").replace(/^\/+/, "");
-    if (rel && !state.gen[k].includes(rel)){
-      state.gen[k].push(rel);
-      saveGenConfigLocal();
+    if (!state.genRoot){ toast("Set project root first.", "bad"); return; }
+    try {
+      const r = await postJSON("/api/pick-file", {initial: state.genRoot, base: state.genRoot});
+      if (!r.path) return;
+      if (!r.relative){ toast("Selected file is outside project root.", "bad"); return; }
+      const k = bfile.dataset.browseFile;
+      if (!state.gen[k].includes(r.relative)) state.gen[k].push(r.relative);
       renderRules();
-    }
+    } catch(e){ toast(e.message, "bad"); }
     return;
   }
 
   const bfn = ev.target.closest("button[data-browse-filename]");
   if (bfn){
-    const k = bfn.dataset.browseFilename;
-    const picked = prompt("Enter exact filename (e.g. Dockerfile, .env.local):");
-    if (!picked) return;
-    const basename = picked.trim().split("/").pop().split("\\").pop();
-    if (basename && !state.gen[k].includes(basename)){
-      state.gen[k].push(basename);
-      saveGenConfigLocal();
+    try {
+      const r = await postJSON("/api/pick-file", {initial: state.genRoot, base: state.genRoot});
+      if (!r.path) return;
+      const basename = r.path.split("/").pop().split("\\").pop();
+      if (!basename) return;
+      const k = bfn.dataset.browseFilename;
+      if (!state.gen[k].includes(basename)) state.gen[k].push(basename);
       renderRules();
-    }
+    } catch(e){ toast(e.message, "bad"); }
     return;
   }
 });
 
-$("genBrowse").onclick = openBrowserDirectory;
-$("editorBrowse").onclick = openBrowserDirectory;
-$("genUploadZipBtn").onclick = () => { $("hiddenZipInput").value = ""; $("hiddenZipInput").click(); };
-$("editorUploadZipBtn").onclick = () => { $("hiddenZipInput").value = ""; $("hiddenZipInput").click(); };
-$("genDownloadZipBtn").onclick = () => downloadWorkspaceAsZip();
-$("editorDownloadZipBtn").onclick = () => downloadWorkspaceAsZip();
-
-$("editorReloadBtn").onclick = async () => {
-  if (workspace.mode !== "fsa" || !workspace.dirHandle) return;
+$("genBrowse").onclick = async () => {
   try {
-    const map = await readDirectoryHandleRecursive(workspace.dirHandle);
-    workspace.files = map;
-    rebuildWorkspaceFolderSet();
-    updateWorkspaceStatusUI();
-    doGenScan();
-    toast("Rescanned folder '" + workspace.name + "' (" + map.size + " files).", "ok");
-  } catch(e){
-    toast("Rescan failed: " + e.message, "bad");
-  }
+    const r = await postJSON("/api/pick-folder", {initial: state.genRoot});
+    if (r.path){ state.genRoot = r.path; $("genRoot").value = r.path; }
+  } catch(e){ toast(e.message, "bad"); }
 };
 
+$("genRoot").oninput = () => { state.genRoot = $("genRoot").value.trim(); };
+
 function collectGenConfig(){
-  return normalizeGenConfigClient(state.gen, state.genDefaults);
-}
-
-function scanLoadedWorkspace(config){
-  const exclFolders = new Set(config.excluded_folders || []);
-  const inclFolders = new Set(config.included_folders || []);
-  const exclFiles = new Set(config.excluded_files || []);
-  const inclFiles = new Set(config.included_files || []);
-  const exclExts = new Set((config.excluded_extensions || []).map(x => x.toLowerCase()));
-  const inclExts = new Set((config.included_extensions || []).map(x => x.toLowerCase()));
-  const exclNames = new Set(config.excluded_filenames || []);
-  const inclNames = new Set(config.included_filenames || []);
-
-  const included = [];
-  const excludedFiles = [];
-  const excludedFoldersMap = new Map();
-
-  function shouldConsiderFileByFolderWhitelist(relFile){
-    if (!inclFolders.size) return true;
-    for (const inc of inclFolders){
-      if (!inc || relFile === inc || relFile.startsWith(inc + "/")) return true;
-    }
-    return false;
-  }
-
-  const sortedPaths = Array.from(workspace.files.keys()).sort();
-  for (const rel of sortedPaths){
-    const entry = workspace.files.get(rel);
-    const parts = rel.split("/");
-    const filename = parts[parts.length - 1];
-    if (filename === "project_source.txt") continue;
-
-    // Check if inside an excluded folder
-    let matchedExclFolder = null;
-    let prefix = "";
-    for (let i = 0; i < parts.length - 1; i++){
-      const seg = parts[i];
-      prefix = prefix ? (prefix + "/" + seg) : seg;
-      if (exclFolders.has(seg) || exclFolders.has(prefix)){
-        matchedExclFolder = prefix;
-        break;
-      }
-    }
-
-    if (matchedExclFolder){
-      excludedFoldersMap.set(matchedExclFolder, (excludedFoldersMap.get(matchedExclFolder) || 0) + 1);
-      continue;
-    }
-
-    if (!shouldConsiderFileByFolderWhitelist(rel)){
-      continue;
-    }
-
-    const ext = getExt(filename);
-    let reason = null;
-    if (exclFiles.has(rel)) reason = "excluded file path";
-    else if (exclNames.has(filename)) reason = "excluded filename";
-    else if (ext && exclExts.has(ext)) reason = "excluded extension " + ext;
-
-    if (reason){
-      excludedFiles.push({ path: rel, reason });
-      continue;
-    }
-
-    const isIncluded = inclFiles.has(rel) || inclNames.has(filename) || (ext && inclExts.has(ext));
-    if (!isIncluded){
-      excludedFiles.push({ path: rel, reason: "no matching include rule" });
-      continue;
-    }
-
-    if (entry.binary){
-      excludedFiles.push({ path: rel, reason: "binary file" });
-      continue;
-    }
-
-    included.push({ path: rel, size: entry.size, ext });
-  }
-
-  const excludedFolders = Array.from(excludedFoldersMap.entries())
-    .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(([path, count]) => ({ path, reason: "excluded folder rule", file_count: count }));
-
   return {
-    root: workspace.name || "workspace",
-    included,
-    excluded_folders: excludedFolders,
-    excluded_files: excludedFiles,
-    errors: [],
+    root: state.genRoot,
+    included_folders: state.gen?.included_folders || [],
+    excluded_folders: state.gen?.excluded_folders || [],
+    included_files: state.gen?.included_files || [],
+    excluded_files: state.gen?.excluded_files || [],
+    included_extensions: state.gen?.included_extensions || [],
+    excluded_extensions: state.gen?.excluded_extensions || [],
+    included_filenames: state.gen?.included_filenames || [],
+    excluded_filenames: state.gen?.excluded_filenames || [],
   };
 }
 
-function doGenScan(){
+async function doGenScan(){
   $("genErrors").textContent = "";
-  if (workspace.mode === "none"){
-    $("genErrors").textContent = "Load a project folder (OPEN FOLDER…) or upload a project ZIP first.";
-    return;
+  $("genStatus").textContent = "Scanning…";
+  $("genScan").disabled = true;
+  try {
+    const data = await postJSON("/api/gen/scan", collectGenConfig());
+    state.genScan = data;
+    renderScanPanels();
+    updateScannedDatalist();
+    $("genStatus").innerHTML = '<span class="ok">Scanned ' +
+      data.included.length + ' included file(s), ' +
+      data.excluded_folders.length + ' excluded folder(s), ' +
+      data.excluded_files.length + ' excluded file(s).</span>';
+    $("genRootStatus").textContent = data.root;
+    $("genRootStatus").className = "badge ok";
+  } catch(e){
+    $("genErrors").textContent = e.message;
+    $("genStatus").textContent = "";
+  } finally {
+    $("genScan").disabled = false;
   }
-  const cfg = collectGenConfig();
-  const data = scanLoadedWorkspace(cfg);
-  state.genScan = data;
-  renderScanPanels();
-  updateScannedDatalist();
-  $("genStatus").innerHTML = '<span class="ok">Scanned ' +
-    data.included.length + ' included file(s), ' +
-    data.excluded_folders.length + ' excluded folder(s), ' +
-    data.excluded_files.length + ' excluded file(s).</span>';
 }
 
 function updateScannedDatalist(){
@@ -1730,86 +1157,69 @@ $("searchIncluded").oninput = renderScanPanels;
 $("searchExcludedFolders").oninput = renderScanPanels;
 $("searchExcludedFiles").oninput = renderScanPanels;
 
-$("listExcludedFolders").addEventListener("click", (ev) => {
+$("listExcludedFolders").addEventListener("click", async (ev) => {
   const btn = ev.target.closest("button[data-folder-view]");
   if (!btn) return;
-  const folderPrefix = btn.dataset.folderView + "/";
-  const matches = Array.from(workspace.files.keys()).filter(k => k.startsWith(folderPrefix)).sort();
-  const msg = matches.length + " file(s) inside " + btn.dataset.folderView + ":\n\n" +
-    matches.slice(0, 30).join("\n") +
-    (matches.length > 30 ? "\n… +" + (matches.length - 30) + " more" : "");
-  alert(msg);
+  try {
+    const data = await postJSON("/api/gen/folder-contents", {
+      root: state.genRoot, path: btn.dataset.folderView
+    });
+    const msg = data.files.length + " file(s) inside:\n\n" +
+      data.files.slice(0, 30).map(f => f.path).join("\n") +
+      (data.files.length > 30 ? "\n… +" + (data.files.length - 30) + " more" : "");
+    alert(msg);
+  } catch(e){ toast(e.message, "bad"); }
 });
 
 $("genScan").onclick = doGenScan;
 
-$("genSaveCfg").onclick = () => {
-  saveGenConfigLocal();
-  renderRules();
-  toast("Generator rules saved in browser storage.", "ok");
+$("genSaveCfg").onclick = async () => {
+  try {
+    const data = await postJSON("/api/gen/config", collectGenConfig());
+    state.gen = data.config;
+    renderRules();
+    toast("Config saved.", "ok");
+  } catch(e){ toast(e.message, "bad"); }
 };
 
 $("genResetCfg").onclick = async () => {
-  if (!confirm("Reset generator rules to defaults?")) return;
+  if (!confirm("Reset generator rules to defaults? This does not change the root path.")) return;
   try {
     const data = await api("/api/gen/config");
-    state.gen = normalizeGenConfigClient(data.defaults, data.defaults);
-    saveGenConfigLocal();
+    const root = state.genRoot;
+    state.gen = Object.assign({}, data.defaults, {root});
     renderRules();
-    if (workspace.mode !== "none") doGenScan();
+    await postJSON("/api/gen/config", collectGenConfig());
     toast("Config reset to defaults.", "ok");
   } catch(e){ toast(e.message, "bad"); }
 };
 
-function generateAndDownloadProjectSource(selectedFilesSet = null, label = ""){
-  if (workspace.mode === "none"){
-    $("genErrors").textContent = "Load a project folder or upload a ZIP first.";
-    return;
-  }
-  saveGenConfigLocal();
-  const scan = scanLoadedWorkspace(collectGenConfig());
-  state.genScan = scan;
-  renderScanPanels();
-
-  const parts = [];
-  let count = 0;
-  for (const item of scan.included){
-    const rel = item.path;
-    if (selectedFilesSet && !selectedFilesSet.has(rel)) continue;
-    const entry = workspace.files.get(rel);
-    if (!entry || entry.content == null) continue;
-    parts.push("/" + rel + "\n\n" + entry.content + "\n\n");
-    count++;
-  }
-
-  const fullText = parts.join("");
-  const blob = new Blob([fullText], { type: "text/plain;charset=utf-8" });
-  const totalBytes = blob.size;
-
-  if (state.lastGeneratedBlobUrl){
-    try { URL.revokeObjectURL(state.lastGeneratedBlobUrl); } catch(e){}
-  }
-  state.lastGeneratedBlobUrl = URL.createObjectURL(blob);
-
-  triggerBlobDownload(blob, "project_source.txt");
-
-  $("genStatus").innerHTML = '<span class="ok">' + esc(label || "Generated & downloaded project_source.txt.") + '</span>';
+function renderGenOutput(data, label){
+  $("genStatus").innerHTML = '<span class="ok">' + esc(label || "Generated project_source.txt.") + '</span>';
   $("genOutput").innerHTML =
-    '<div class="row space">' +
-      '<div>' +
-        '<div class="mono small">Output file: <strong>project_source.txt</strong> (Browser Download)</div>' +
-        '<div class="small">' +
-          count + ' file(s) · ' + fmtBytes(totalBytes) + ' · ' +
-          scan.excluded_folders.length + ' excluded folder(s) · ' +
-          scan.excluded_files.length + ' excluded file(s)' +
-        '</div>' +
-      '</div>' +
-      '<a class="btn small primary" href="' + esc(state.lastGeneratedBlobUrl) + '" download="project_source.txt">&#11015; DOWNLOAD project_source.txt AGAIN</a>' +
-    '</div>';
+    '<div class="mono small">Output file: <strong>' + esc(data.output) + '</strong></div>' +
+    '<div class="small">' +
+      data.included_count + ' file(s) · ' + fmtBytes(data.bytes) + ' · ' +
+      data.excluded_folders_count + ' excluded folder(s) · ' +
+      data.excluded_files_count + ' excluded file(s)' +
+    '</div>' +
+    (data.errors && data.errors.length
+      ? '<div class="err">Read errors:\n' + data.errors.map(esc).join("\n") + '</div>' : "");
 }
 
-$("genGenerate").onclick = () => {
-  generateAndDownloadProjectSource(null, "Generated and downloaded project_source.txt (all included files).");
+$("genGenerate").onclick = async () => {
+  $("genErrors").textContent = "";
+  $("genStatus").textContent = "Generating all included files…";
+  $("genGenerate").disabled = true;
+  try {
+    const data = await postJSON("/api/gen/generate", collectGenConfig());
+    renderGenOutput(data, "Generated project_source.txt (all included files).");
+  } catch(e){
+    $("genErrors").textContent = e.message;
+    $("genStatus").textContent = "";
+  } finally {
+    $("genGenerate").disabled = false;
+  }
 };
 
 /* --- AI Affected-Files Analyzer --- */
@@ -1889,37 +1299,10 @@ $("genAiAnalyzeBtn").onclick = async () => {
     $("genAiStatus").innerHTML = '<span class="bad">Enter or dictate a task prompt first.</span>';
     return;
   }
-  if (workspace.mode === "none"){
-    $("genAiStatus").innerHTML = '<span class="bad">Open a project folder or upload a ZIP first.</span>';
+  if (!state.genRoot){
+    $("genAiStatus").innerHTML = '<span class="bad">Set a project folder first.</span>';
     return;
   }
-
-  const scan = scanLoadedWorkspace(collectGenConfig());
-  state.genScan = scan;
-  renderScanPanels();
-  updateScannedDatalist();
-
-  if (!scan.included.length){
-    $("genAiStatus").innerHTML = '<span class="bad">No scannable files found — check include rules.</span>';
-    return;
-  }
-
-  // Build compact manifest payload for the serverless endpoint
-  const manifestItems = [];
-  let charBudget = 0;
-  for (const item of scan.included){
-    const entry = workspace.files.get(item.path);
-    const text = (entry && entry.content) ? entry.content : "";
-    const head = charBudget < 28000 ? text.split(/\r?\n/).slice(0, 30).join("\n").slice(0, 1000) : "";
-    charBudget += head.length + item.path.length;
-    manifestItems.push({
-      path: item.path,
-      size: item.size,
-      head: head,
-    });
-    if (manifestItems.length >= 400) break;
-  }
-
   $("genAiAnalyzeBtn").disabled = true;
   $("genAiStatus").innerHTML = '<span class="warn">Analysing project with openai/gpt-oss-120b…</span>';
   $("genErrors").textContent = "";
@@ -1927,8 +1310,7 @@ $("genAiAnalyzeBtn").onclick = async () => {
   try {
     const data = await postJSON("/api/ai/analyze", {
       prompt: prompt,
-      manifest_items: manifestItems,
-      scanned_count: scan.included.length,
+      config: collectGenConfig(),
       max_files: 50,
       api_keys: state.groqKeys || [],
     });
@@ -1949,22 +1331,76 @@ $("genAiAnalyzeBtn").onclick = async () => {
   }
 };
 
-$("genAiGenerateBtn").onclick = () => {
+$("genAiGenerateBtn").onclick = async () => {
   const selected = (state.aiSelected || []).filter(p => state.aiChecked[p]);
   if (!selected.length){
     toast("Select at least one affected file to generate.", "bad");
     return;
   }
-  generateAndDownloadProjectSource(
-    new Set(selected),
-    "Generated & downloaded project_source.txt with " + selected.length + " approved file(s)."
-  );
-  toast("Downloaded project_source.txt (" + selected.length + " affected files).", "ok");
+  $("genAiGenerateBtn").disabled = true;
+  $("genStatus").textContent = "Generating project_source.txt for selected files…";
+  $("genErrors").textContent = "";
+  try {
+    const data = await postJSON("/api/gen/generate-selected", {
+      config: collectGenConfig(),
+      files: selected
+    });
+    renderGenOutput(data, "Generated project_source.txt with " + data.included_count + " approved file(s).");
+    toast("Generated project_source.txt (" + data.included_count + " affected files).", "ok");
+  } catch(e){
+    $("genErrors").textContent = e.message;
+    $("genStatus").textContent = "";
+    toast(e.message, "bad");
+  } finally {
+    $("genAiGenerateBtn").disabled = false;
+  }
 };
 
 /* ==========================================================
-   SECTION 2 — AI File Editor (Stateless Check + Browser/ZIP Apply & IndexedDB History)
+   SECTION 2 — AI File Editor
    ========================================================== */
+
+async function loadProject(){
+  try {
+    const p = await api("/api/project");
+    $("editorRoot").value = p.root || "";
+    $("editorRootStatus").textContent = p.exists ? "ready" : "missing";
+    $("editorRootStatus").className = "badge " + (p.exists ? "ok" : "bad");
+    $("editorBackupDir").textContent = p.backup_dir || "—";
+  } catch(e){
+    $("editorRootMsg").innerHTML = '<span class="bad">Error: ' + esc(e.message) + '</span>';
+  }
+}
+
+$("editorBrowse").onclick = async () => {
+  try {
+    const r = await postJSON("/api/pick-folder", {initial: $("editorRoot").value || ""});
+    if (r.path) $("editorRoot").value = r.path;
+  } catch(e){ toast(e.message, "bad"); }
+};
+
+$("editorSaveRoot").onclick = async () => {
+  const root = ($("editorRoot").value || "").trim();
+  if (!root){
+    $("editorRootMsg").innerHTML = '<span class="bad">Root path is empty.</span>';
+    return;
+  }
+  $("editorSaveRoot").disabled = true;
+  $("editorRootMsg").textContent = "Saving…";
+  try {
+    await postJSON("/api/project", {root});
+    $("editorRootMsg").innerHTML =
+      '<span class="ok">Editor root updated. Existing backups from other roots are preserved in their own .backup folders.</span>';
+    cancelPreview();
+    await loadProject();
+    await loadHistory();
+  } catch(e){
+    $("editorRootMsg").innerHTML = '<span class="bad">' + esc(e.message) + '</span>';
+  } finally {
+    $("editorSaveRoot").disabled = false;
+  }
+};
+
 const RE_ESC = /^\\+@@/;
 function unescapeLine(line){
   if (RE_ESC.test(line)) return line.substring(1);
@@ -2081,7 +1517,7 @@ function parseResponse(text){
 
   while ((m = re.exec(text)) !== null){
     matched++;
-    const path = m[1].trim().replace(/\\/g, "/").replace(/^\/+/, "");
+    const path = m[1].trim();
     if (!path) continue;
     if (order.includes(path) || parseErrors.some(e => e.path === path)){
       dupes.push(path);
@@ -2198,18 +1634,24 @@ function doParse(){
 }
 
 function buildCheckPayload(){
-  const sourceFiles = {};
-  for (const p of state.editor.order){
-    const normP = p.replace(/\\/g, "/").replace(/^\/+/, "");
-    const entry = workspace.files.get(normP);
-    sourceFiles[normP] = (entry && entry.content != null) ? entry.content : null;
-  }
   return {
     files: state.editor.files || {},
     ops: state.editor.ops || [],
     expected: {},
-    source_files: sourceFiles,
   };
+}
+
+function filterPayloadToValidFiles(validPathsSet){
+  const files = {};
+  for (const [k, v] of Object.entries(state.editor.files || {})){
+    if (validPathsSet.has(k)) files[k] = v;
+  }
+  const ops = (state.editor.ops || []).filter(o => validPathsSet.has(o.path));
+  const expected = {};
+  for (const [k, v] of Object.entries(state.editor.expected || {})){
+    if (validPathsSet.has(k)) expected[k] = v;
+  }
+  return { files, ops, expected };
 }
 
 function retainOnlyFailedInEditor(failedErrors){
@@ -2224,22 +1666,12 @@ function retainOnlyFailedInEditor(failedErrors){
 
 async function doCheck(){
   $("checkMsg").textContent = "";
-  if (workspace.mode === "none"){
-    $("checkMsg").innerHTML = '<span class="bad">Load a project folder (OPEN FOLDER…) or upload a ZIP first.</span>';
-    return;
-  }
   if (!state.editor.order.length && !state.editor.parseErrors.length){
     $("checkMsg").innerHTML = '<span class="bad">Parse files first.</span>';
     return;
   }
   $("checkBtn").disabled = true;
   try {
-    // Refresh from disk if in live FSA mode so external changes are caught
-    if (workspace.mode === "fsa" && workspace.dirHandle){
-      workspace.files = await readDirectoryHandleRecursive(workspace.dirHandle);
-      rebuildWorkspaceFolderSet();
-    }
-
     let data = { files: [], errors: [] };
     if (state.editor.order.length){
       data = await postJSON("/api/check", buildCheckPayload());
@@ -2323,7 +1755,6 @@ function renderPreview(){
   const actionableCount = state.editor.check.filter(f => f.status !== "unchanged").length;
   $("applyBtn").disabled = actionableCount === 0;
   $("keepFailedBtn").classList.toggle("hidden", !(state.editor.checkErrors && state.editor.checkErrors.length));
-  $("downloadPatchedZipBtn").classList.toggle("hidden", workspace.mode !== "memory");
   $("applyMsg").textContent = "";
   $("previewCard").classList.remove("hidden");
 }
@@ -2334,8 +1765,6 @@ $("keepFailedBtn").onclick = () => {
   toast("Input updated to contain only the failed file(s) for retry.", "ok");
   doParse();
 };
-
-$("downloadPatchedZipBtn").onclick = () => downloadWorkspaceAsZip("patched");
 
 function formatChangeLabel(c){
   const t = (c.type || '').toLowerCase();
@@ -2410,114 +1839,43 @@ function cancelPreview(){
 }
 
 async function applyChanges(){
-  const actionable = (state.editor.check || []).filter(f => f.status !== "unchanged");
-  if (!actionable.length) return;
+  const validPaths = new Set((state.editor.check || []).map(f => f.path));
+  if (!validPaths.size) return;
 
   $("applyBtn").disabled = true;
   $("applyMsg").textContent = "";
-
   try {
-    // Check for concurrent modifications before applying
-    if (workspace.mode === "fsa" && workspace.dirHandle){
-      workspace.files = await readDirectoryHandleRecursive(workspace.dirHandle);
-    }
+    const payload = filterPayloadToValidFiles(validPaths);
+    const data = await postJSON("/api/apply", payload);
+    const allErrors = (state.editor.parseErrors || []).concat(data.errors || []);
 
-    const conflicts = [];
-    for (const f of actionable){
-      const expectedHash = state.editor.expected[f.path];
-      const currEntry = workspace.files.get(f.path);
-      const currHash = (currEntry && currEntry.content != null) ? await sha256Hex(currEntry.content) : null;
-      if (expectedHash !== undefined && expectedHash !== currHash){
-        conflicts.push(f.path);
-      }
-    }
-
-    if (conflicts.length){
-      $("applyMsg").innerHTML = '<span class="bad">CONFLICT: Files changed since preview: ' + esc(conflicts.join(", ")) + '</span>';
-      return;
-    }
-
-    const writeErrors = [];
-    const backupFiles = [];
-    let applied = 0;
-
-    for (const f of actionable){
-      const rel = f.path;
-      const oldEntry = workspace.files.get(rel);
-      const oldExists = !!(oldEntry && oldEntry.content != null);
-      const oldContent = oldExists ? oldEntry.content : null;
-      const newExists = f.new != null && f.status !== "deleted";
-      const newContent = newExists ? f.new : null;
-
-      try {
-        if (newExists){
-          await writeAndVerifyWorkspaceFile(rel, newContent);
-        } else {
-          await deleteAndVerifyWorkspaceFile(rel);
-        }
-        applied++;
-        backupFiles.push({
-          path: rel,
-          status: f.status,
-          old_exists: oldExists,
-          new_exists: newExists,
-          old: oldContent,
-          new: newContent,
-        });
-      } catch(e){
-        writeErrors.push({ path: rel, error: e.message || String(e) });
-      }
-    }
-
-    rebuildWorkspaceFolderSet();
-    updateWorkspaceStatusUI();
-    doGenScan();
-
-    // Save backup record in Browser IndexedDB
-    if (backupFiles.length){
-      const now = new Date();
-      const stamp = now.toISOString().replace("T", " ").slice(0, 19);
-      const id = now.toISOString().replace(/[:.]/g, "-") + "_" + Math.random().toString(36).slice(2, 6);
-      await idbPut("history", {
-        id,
-        workspace: workspace.name || "default",
-        timestamp: stamp,
-        sortTime: now.getTime(),
-        type: "apply",
-        count: backupFiles.length,
-        files: backupFiles,
-      });
-    }
-
-    // If in ZIP/Memory mode, automatically trigger a patched ZIP download
-    if (workspace.mode === "memory" && applied > 0){
-      await downloadWorkspaceAsZip("patched");
-    }
-
-    const allErrors = (state.editor.checkErrors || []).concat(writeErrors);
     if (allErrors.length > 0){
       const errReport = allErrors.map(e => e.path + ": " + e.error).join("\n");
       retainOnlyFailedInEditor(allErrors);
 
       $("parseMsg").innerHTML =
-        '<span class="ok">Applied ' + applied + ' valid file(s).</span> ' +
+        '<span class="ok">Applied ' + data.applied + ' valid file(s).</span> ' +
         '<span class="bad">' + allErrors.length + ' file(s) failed and were NOT modified. ' +
         'Only the failed file(s) remain in the input box so you can submit them again in the next turn.</span>' +
         '<div class="err">' + esc(errReport) + '</div>';
 
-      toast("Applied " + applied + " file(s); " + allErrors.length + " failed (kept for retry).", "bad");
+      toast("Applied " + data.applied + " file(s); " + allErrors.length + " failed (kept for retry).", "bad");
       state.editor.check = [];
       state.editor.checkErrors = allErrors;
       renderPreview();
     } else {
-      const modeMsg = workspace.mode === "fsa" ? "directly to folder" : "and downloaded patched ZIP";
-      toast(applied === 0 ? "Nothing to apply." : ("Applied " + applied + " file(s) " + modeMsg + "."), "ok");
+      toast(data.applied === 0 ? "Nothing to apply." : ("Applied " + data.applied + " file(s)."), "ok");
       cancelPreview();
     }
-
-    await loadHistory();
+    loadHistory();
+    loadProject();
   } catch(e){
-    $("applyMsg").innerHTML = '<span class="bad">' + esc(e.message) + '</span>';
+    if (e.status === 409 && e.detail && e.detail.conflicts){
+      $("applyMsg").innerHTML = '<span class="bad">CONFLICT: ' +
+        esc(e.detail.conflicts.join(", ")) + '</span>';
+    } else {
+      $("applyMsg").innerHTML = '<span class="bad">' + esc(e.message) + '</span>';
+    }
   } finally {
     $("applyBtn").disabled = false;
   }
@@ -2525,21 +1883,20 @@ async function applyChanges(){
 
 async function loadHistory(){
   try {
-    const all = await idbGetAll("history");
-    const list = all.sort((a, b) => (b.sortTime || 0) - (a.sortTime || 0));
+    const data = await api("/api/history");
+    const list = data.history || [];
     if (!list.length){
       $("historyBox").innerHTML = '<p class="muted">No history yet.</p>';
       return;
     }
     $("historyBox").innerHTML = list.map(h => {
       const id = esc(h.id);
-      const wsBadge = h.workspace ? (' <span class="badge">' + esc(h.workspace) + '</span>') : '';
       return '<div class="histitem">' +
         '<div class="histhead">' +
-          '<div><div class="mono">' + esc(h.timestamp) + wsBadge + '</div>' +
+          '<div><div class="mono">' + esc(h.timestamp) + '</div>' +
           '<div class="muted">' + (h.count || 0) + ' file(s) · ' +
           esc(h.type || "apply") + '</div></div>' +
-          '<div class="row" style="margin:top:0">' +
+          '<div class="row" style="margin-top:0">' +
             '<button class="btn tiny" data-examine="' + id + '">EXAMINE</button>' +
             '<button class="btn tiny danger" data-restore="' + id + '">RESTORE</button>' +
           '</div>' +
@@ -2552,13 +1909,6 @@ async function loadHistory(){
   }
 }
 
-$("histClearBtn").onclick = async () => {
-  if (!confirm("Clear all saved backup history from browser storage?")) return;
-  await idbClear("history");
-  await loadHistory();
-  toast("Cleared backup history.", "ok");
-};
-
 async function examine(historyId){
   const el = $("hist-" + historyId);
   if (!el) return;
@@ -2567,9 +1917,8 @@ async function examine(historyId){
   if (el.dataset.loaded) return;
   el.innerHTML = '<p class="muted">Loading…</p>';
   try {
-    const d = await idbGet("history", historyId);
-    if (!d) throw new Error("History entry not found.");
-    el.innerHTML = (d.files && d.files.length)
+    const d = await api("/api/history/" + encodeURIComponent(historyId));
+    el.innerHTML = d.files.length
       ? d.files.map((f, i) => fileDetailHtml(historyId, f, i)).join("")
       : '<p class="muted">No files.</p>';
     el.dataset.loaded = "1";
@@ -2605,118 +1954,28 @@ function askRestore(historyId){
 
 async function doRestore(historyId, force){
   try {
-    if (workspace.mode === "none"){
-      toast("Load the project folder or ZIP before restoring backups.", "bad");
-      return;
-    }
-    const record = await idbGet("history", historyId);
-    if (!record) throw new Error("Backup entry not found.");
-
-    if (workspace.mode === "fsa" && workspace.dirHandle){
-      workspace.files = await readDirectoryHandleRecursive(workspace.dirHandle);
-    }
-
-    const conflicts = [];
-    const opsToRun = [];
-
-    for (const entry of (record.files || [])){
-      const rel = entry.path;
-      const currEntry = workspace.files.get(rel);
-      const currExists = !!(currEntry && currEntry.content != null);
-      const currContent = currExists ? currEntry.content : null;
-
-      if (entry.new_exists){
-        if (!currExists || currContent !== entry.new){
-          conflicts.push(rel);
-        }
-      } else {
-        if (currExists){
-          conflicts.push(rel);
-        }
-      }
-
-      const targetExists = !!entry.old_exists;
-      const targetContent = targetExists ? entry.old : null;
-
-      if (targetExists === currExists && (!targetExists || targetContent === currContent)){
-        continue;
-      }
-
-      opsToRun.push({
-        rel,
-        old_exists: currExists,
-        old_content: currContent,
-        new_exists: targetExists,
-        new_content: targetContent,
-        status: targetExists ? "restored" : "deleted",
-      });
-    }
-
-    if (conflicts.length && !force){
+    const d = await postJSON(
+      "/api/history/" + encodeURIComponent(historyId) + "/restore", {force: !!force});
+    toast(d.restored === 0 ? "Nothing to restore." : ("Restored " + d.restored + " file(s)."), "ok");
+    loadHistory();
+  } catch(e){
+    if (e.status === 409 && e.detail && e.detail.conflicts){
       const proceed = confirm(
         "CONFLICT\n\nThese files changed after the original operation:\n\n" +
-        conflicts.join("\n") +
-        "\n\nRestoring will overwrite or delete them.\n\nContinue anyway?"
-      );
-      if (proceed) return await doRestore(historyId, true);
-      toast("Restore cancelled.", "bad");
-      return;
+        e.detail.conflicts.join("\n") +
+        "\n\nRestoring will overwrite or delete them.\n\nContinue anyway?");
+      if (proceed) await doRestore(historyId, true);
+      else toast("Restore cancelled.", "bad");
+    } else {
+      toast(e.message, "bad");
     }
-
-    if (!opsToRun.length){
-      toast("Nothing to restore — files are already in that state.", "ok");
-      return;
-    }
-
-    const backupFiles = [];
-    let restoredCount = 0;
-    for (const op of opsToRun){
-      if (op.new_exists){
-        await writeAndVerifyWorkspaceFile(op.rel, op.new_content);
-      } else {
-        await deleteAndVerifyWorkspaceFile(op.rel);
-      }
-      restoredCount++;
-      backupFiles.push({
-        path: op.rel,
-        status: op.status,
-        old_exists: op.old_exists,
-        new_exists: op.new_exists,
-        old: op.old_content,
-        new: op.new_content,
-      });
-    }
-
-    const now = new Date();
-    const id = now.toISOString().replace(/[:.]/g, "-") + "_" + Math.random().toString(36).slice(2, 6);
-    await idbPut("history", {
-      id,
-      workspace: workspace.name || "default",
-      timestamp: now.toISOString().replace("T", " ").slice(0, 19),
-      sortTime: now.getTime(),
-      type: "restore",
-      count: backupFiles.length,
-      files: backupFiles,
-    });
-
-    rebuildWorkspaceFolderSet();
-    updateWorkspaceStatusUI();
-    doGenScan();
-
-    if (workspace.mode === "memory" && restoredCount > 0){
-      await downloadWorkspaceAsZip("restored");
-    }
-
-    toast("Restored " + restoredCount + " file(s).", "ok");
-    await loadHistory();
-  } catch(e){
-    toast(e.message || String(e), "bad");
   }
 }
 
 /* ==========================================================
-   SECTION 3 — Voice Prompt + IndexedDB Prompt & Audio History
+   SECTION 3 — Voice Prompt + Saved Recording Playback
    ========================================================== */
+
 function composeFinal(){
   const custom = ($("promptText").value || "").trimEnd();
   const fixed = ($("fixedPromptText").value || "");
@@ -2725,11 +1984,6 @@ function composeFinal(){
 
 async function loadFixedPrompt(){
   try {
-    const localSaved = localStorage.getItem(FIXED_PROMPT_STORAGE_KEY);
-    if (localSaved && localSaved.trim()){
-      $("fixedPromptText").value = localSaved;
-      return;
-    }
     const d = await api("/api/fixed-prompt");
     $("fixedPromptText").value = d.text;
   } catch(e){ toast("Failed to load fixed prompt: " + e.message, "bad"); }
@@ -2779,25 +2033,15 @@ $("copyPromptBtn").onclick = async () => {
   }
 
   try {
-    const existing = await idbGetAll("prompts");
-    const maxRank = existing.reduce((m, x) => Math.max(m, x.rank || 0), 0);
-    const now = new Date();
-    const record = {
-      id: "p_" + now.getTime() + "_" + Math.random().toString(36).slice(2, 7),
-      rank: maxRank + 1,
-      timestamp: now.toISOString().replace("T", " ").slice(0, 19),
+    await postJSON("/api/prompts", {
       custom_prompt: custom,
       combined_prompt: combined,
-      char_count: combined.length,
-      recording_id: state.lastRecordingId || null,
       recording_filename: state.lastRecordingFilename || null,
-    };
-    await idbPut("prompts", record);
-
+    });
     $("copyStatus").innerHTML = '<span class="ok">Copied ' + combined.length +
       ' chars (task + fixed format). Snapshot' +
-      (state.lastRecordingId ? ' + voice recording' : '') +
-      ' saved to browser prompt history.</span>';
+      (state.lastRecordingFilename ? ' + voice recording' : '') +
+      ' saved to prompt history.</span>';
     await loadPromptHistory();
   } catch(e){
     $("copyStatus").innerHTML = '<span class="ok">Copied to clipboard.</span> ' +
@@ -2807,13 +2051,8 @@ $("copyPromptBtn").onclick = async () => {
 
 async function loadPromptHistory(){
   try {
-    const items = await idbGetAll("prompts");
-    for (const it of items){
-      if (it.recording_id){
-        it.recording_url = await getRecordingUrlFromIDB(it.recording_id);
-      }
-    }
-    state.prompts = items.sort((a, b) => (b.rank || 0) - (a.rank || 0));
+    const d = await api("/api/prompts");
+    state.prompts = d.items || [];
     renderPromptHistory();
   } catch(e){
     $("promptHistoryBox").innerHTML = '<p class="bad">' + esc(e.message) + '</p>';
@@ -2877,13 +2116,11 @@ $("promptHistoryBox").addEventListener("click", async (ev) => {
     el.classList.remove("hidden");
     if (el.dataset.loaded) return;
     try {
-      const d = await idbGet("prompts", viewBtn);
-      if (!d) throw new Error("Prompt not found");
-      const recUrl = d.recording_id ? await getRecordingUrlFromIDB(d.recording_id) : null;
-      const audioHtml = recUrl
+      const d = await api("/api/prompts/" + encodeURIComponent(viewBtn));
+      const audioHtml = d.recording_url
         ? '<div class="difflabel">Saved Voice Recording</div>' +
-          '<div class="audioBar"><audio controls src="' + esc(recUrl) + '"></audio>' +
-          '<a class="btn tiny primary" href="' + esc(recUrl) + '" download="' + esc(d.recording_filename || "voice.webm") + '">&#11015; DOWNLOAD</a></div>'
+          '<div class="audioBar"><audio controls src="' + esc(d.recording_url) + '"></audio>' +
+          '<a class="btn tiny primary" href="' + esc(d.recording_url) + '" download="' + esc(d.recording_filename || "voice.webm") + '">&#11015; DOWNLOAD</a></div>'
         : '';
       el.innerHTML = audioHtml +
         '<div class="difflabel">Custom Task</div><pre class="code">' +
@@ -2895,7 +2132,7 @@ $("promptHistoryBox").addEventListener("click", async (ev) => {
   }
   if (copyBtn){
     try {
-      const d = await idbGet("prompts", copyBtn);
+      const d = await api("/api/prompts/" + encodeURIComponent(copyBtn));
       const ok = await copyTextToClipboard(d.combined_prompt);
       if (!ok) throw new Error("clipboard failed");
       toast("Prompt copied.", "ok");
@@ -2904,14 +2141,12 @@ $("promptHistoryBox").addEventListener("click", async (ev) => {
   }
   if (loadBtn){
     try {
-      const d = await idbGet("prompts", loadBtn);
+      const d = await api("/api/prompts/" + encodeURIComponent(loadBtn));
       $("promptText").value = d.custom_prompt || "";
-      if (d.recording_id){
-        const recUrl = await getRecordingUrlFromIDB(d.recording_id);
-        state.lastRecordingId = d.recording_id;
+      if (d.recording_url){
         state.lastRecordingFilename = d.recording_filename;
-        state.lastRecordingUrl = recUrl;
-        renderAudioPlayerBar("promptAudioPlayerWrap", recUrl, d.recording_filename);
+        state.lastRecordingUrl = d.recording_url;
+        renderAudioPlayerBar("promptAudioPlayerWrap", d.recording_url, d.recording_filename);
       }
       toast("Loaded prompt (and audio recording) into editor.", "ok");
     } catch(e){ toast(e.message, "bad"); }
@@ -2920,7 +2155,7 @@ $("promptHistoryBox").addEventListener("click", async (ev) => {
   if (delBtn){
     if (!confirm("Delete this prompt from history?")) return;
     try {
-      await idbDelete("prompts", delBtn);
+      await api("/api/prompts/" + encodeURIComponent(delBtn), {method: "DELETE"});
       await loadPromptHistory();
       toast("Deleted.", "ok");
     } catch(e){ toast(e.message, "bad"); }
@@ -2928,7 +2163,7 @@ $("promptHistoryBox").addEventListener("click", async (ev) => {
 });
 
 /* ==========================================================
-   SECTION 4 — Fixed Prompt editor (LocalStorage + Server Default)
+   SECTION 4 — Fixed Prompt editor
    ========================================================== */
 $("fixedCopy").onclick = async () => {
   const text = ($("fixedPromptText").value || "").trim();
@@ -2945,15 +2180,11 @@ $("fixedCopy").onclick = async () => {
   }
 };
 
-$("fixedSave").onclick = () => {
-  const text = ($("fixedPromptText").value || "").trim();
-  if (!text){
-    $("fixedStatus").innerHTML = '<span class="bad">Fixed prompt cannot be empty.</span>';
-    return;
-  }
+$("fixedSave").onclick = async () => {
   try {
-    localStorage.setItem(FIXED_PROMPT_STORAGE_KEY, $("fixedPromptText").value);
-    $("fixedStatus").innerHTML = '<span class="ok">Saved in browser storage.</span>';
+    const text = $("fixedPromptText").value;
+    await postJSON("/api/fixed-prompt", {text});
+    $("fixedStatus").innerHTML = '<span class="ok">Saved.</span>';
   } catch(e){
     $("fixedStatus").innerHTML = '<span class="bad">' + esc(e.message) + '</span>';
   }
@@ -2962,7 +2193,6 @@ $("fixedSave").onclick = () => {
 $("fixedReset").onclick = async () => {
   if (!confirm("Reset fixed prompt to the built-in compressed default?")) return;
   try {
-    localStorage.removeItem(FIXED_PROMPT_STORAGE_KEY);
     const d = await postJSON("/api/fixed-prompt/reset", {});
     $("fixedPromptText").value = d.text;
     $("fixedStatus").innerHTML = '<span class="ok">Reset to compressed default.</span>';
@@ -2998,13 +2228,8 @@ $("historyBox").addEventListener("click", (ev) => {
 /* Boot */
 (async function boot(){
   loadGroqKeys();
-  try {
-    const h = await api("/api/health");
-    state.hasServerGroqKey = !!(h && h.has_server_key);
-    renderGroqKeys();
-  } catch(e){}
   await loadGenConfig();
-  updateWorkspaceStatusUI();
+  await loadProject();
   await loadHistory();
   await loadFixedPrompt();
   await loadPromptHistory();
