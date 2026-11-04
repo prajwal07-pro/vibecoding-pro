@@ -7,7 +7,7 @@ from typing import Dict, List, Optional, Tuple
 
 import httpx
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -145,6 +145,22 @@ DEFAULT_GEN_CONFIG = {
 }
 
 app = FastAPI(title="AI Multi-File Editor (Serverless)")
+
+
+def _load_index_html() -> str:
+    candidates = [
+        BASE_DIR / "index.html",
+        BASE_DIR.parent / "index.html",
+        Path.cwd() / "index.html",
+        Path("/var/task/index.html"),
+    ]
+    for p in candidates:
+        try:
+            if p.is_file():
+                return p.read_text(encoding="utf-8")
+        except Exception:
+            continue
+    return "<h1>AI Multi-File Editor</h1><p>index.html not found in deployment bundle.</p>"
 
 
 # ============================================================
@@ -511,7 +527,6 @@ def resolve_patch(source: str, operations: List[PatchOperationIn]) -> Tuple[str,
 # ============================================================
 
 def _resolve_check_stateless(req: FilesIn) -> dict:
-    # Normalize source_files keys provided by the browser workspace
     norm_sources: Dict[str, Optional[str]] = {}
     for k, v in (req.source_files or {}).items():
         try:
@@ -699,18 +714,18 @@ def _build_manifest_from_items(items: List[ManifestItemIn]) -> Tuple[str, int]:
 
 
 # ============================================================
-# Routes
+# Routes (Supports both /api/* and root paths for Vercel CLI 65+)
 # ============================================================
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
+@app.get("/index.html", response_class=HTMLResponse)
+@app.get("/api/index.py", response_class=HTMLResponse)
 def index():
-    index_path = BASE_DIR / "index.html"
-    if index_path.is_file():
-        return FileResponse(index_path)
-    return HTMLResponse("<h1>AI Multi-File Editor</h1><p>index.html not found.</p>", status_code=404)
+    return HTMLResponse(_load_index_html())
 
 
 @app.get("/api/health")
+@app.get("/health")
 def api_health():
     return {
         "ok": True,
@@ -721,22 +736,26 @@ def api_health():
 
 
 @app.get("/api/gen/config")
+@app.get("/gen/config")
 def api_gen_config_get():
     return {"config": dict(DEFAULT_GEN_CONFIG), "defaults": DEFAULT_GEN_CONFIG}
 
 
 @app.post("/api/gen/config")
+@app.post("/gen/config")
 def api_gen_config_save(cfg: GenConfigIn):
     norm = normalize_gen_config(cfg.model_dump())
     return {"ok": True, "config": norm}
 
 
 @app.post("/api/check")
+@app.post("/check")
 def api_check(req: FilesIn):
     return _resolve_check_stateless(req)
 
 
 @app.post("/api/ai/analyze")
+@app.post("/ai/analyze")
 def api_ai_analyze(req: AnalyzeIn):
     if not (req.prompt or "").strip():
         raise HTTPException(400, "Task prompt is empty.")
@@ -833,6 +852,7 @@ def api_ai_analyze(req: AnalyzeIn):
 
 
 @app.post("/api/ai/transcribe")
+@app.post("/ai/transcribe")
 def api_ai_transcribe(
     audio: UploadFile = File(...),
     api_keys: Optional[str] = Form(None),
@@ -909,11 +929,13 @@ def api_ai_transcribe(
 
 
 @app.get("/api/fixed-prompt")
+@app.get("/fixed-prompt")
 def api_fixed_prompt_get():
     return {"text": DEFAULT_FIXED_PROMPT, "is_default": True}
 
 
 @app.post("/api/fixed-prompt")
+@app.post("/fixed-prompt")
 def api_fixed_prompt_save(body: FixedPromptIn):
     if not body.text or not body.text.strip():
         raise HTTPException(400, "Fixed prompt cannot be empty.")
@@ -921,5 +943,6 @@ def api_fixed_prompt_save(body: FixedPromptIn):
 
 
 @app.post("/api/fixed-prompt/reset")
+@app.post("/fixed-prompt/reset")
 def api_fixed_prompt_reset():
     return {"ok": True, "text": DEFAULT_FIXED_PROMPT}
